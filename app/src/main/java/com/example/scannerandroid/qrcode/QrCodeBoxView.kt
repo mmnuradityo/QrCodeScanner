@@ -132,11 +132,8 @@ class QrCodeBoxView @JvmOverloads constructor(
 
     private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
 
-    @SuppressLint("RestrictedApi")
     fun startCamera(cameraPreview: PreviewView) {
         if (action == null) throw RuntimeException("please setAction first!!!")
-
-        shutdown()
 
         try {
             cameraExecutor = Executors.newSingleThreadExecutor()
@@ -181,18 +178,18 @@ class QrCodeBoxView @JvmOverloads constructor(
 
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+            isRunning = false
         }
     }
 
-    @SuppressLint("RestrictedApi")
     fun shutdown() {
         if (!isRunning) return
 
         cameraExecutor?.let {
-            if (!it.isShutdown) {
-                it.shutdownNow()
+            if (!it.isShutdown && !it.isTerminated) {
+                it.shutdown()
                 cameraProviderFuture?.get()?.unbindAll()
-                isRunning = true
+                isRunning = false
             }
         }
     }
