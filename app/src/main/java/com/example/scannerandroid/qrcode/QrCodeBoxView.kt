@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.camera.core.AspectRatio
@@ -15,12 +14,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import java.lang.Math.max
-import java.lang.Math.abs
-import java.lang.Math.min
-import java.lang.RuntimeException
+import com.google.common.util.concurrent.ListenableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 class QrCodeBoxView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -34,6 +31,7 @@ class QrCodeBoxView @JvmOverloads constructor(
     private var isRunning = false
     private var strokeColor: Int = Color.RED
     private var strokeSize: Float = 10F
+    private var strokeSpace: Float = 500F
     private var space: Float = 50F
     private val cornerWidth: Int = 100
     private val trPaint: Paint = Paint()
@@ -43,14 +41,18 @@ class QrCodeBoxView @JvmOverloads constructor(
     private var right: Float = 0F
     private var bottom: Float = 0F
 
+    private var action: QrCodeAnalyzer.Action? = null
+    private var cameraExecutor: ExecutorService? = null
+
     init {
         space = resources.displayMetrics.widthPixels.toFloat() / 8F
         setBackgroundColor(1711276032)
         trPaint.apply {
-            color = Color.TRANSPARENT;
-            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR);
+            color = Color.TRANSPARENT
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
         }
     }
+
     private val screenAspectRatio: Int
         get() {
             val metrics = resources.displayMetrics
@@ -76,23 +78,25 @@ class QrCodeBoxView @JvmOverloads constructor(
 
     fun isValid(rectF: RectF): Boolean {
         return rectF.left >= left && rectF.top >= top
+                && rectF.left <= (left + space) && rectF.top <= (top + space)
                 && rectF.right <= right && rectF.bottom <= bottom
+                && rectF.right >= (right - space) && rectF.bottom >= (bottom - space)
     }
 
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-         left = (width / 2 - 500) + space
-         top = (height / 2 - 500) + space
-         right = (width / 2 + 500) - space
-         bottom = (height / 2 + 500) - space
+        left = (width / 2) - strokeSpace + space
+        top = (height / 2) - strokeSpace + space
+        right = (width / 2) + strokeSpace - space
+        bottom = (height / 2) + strokeSpace - space
 
-        canvas.drawPath(
-            createCornersPath(left, top, right, bottom), createPaint()
-        )
         canvas.drawRect(
             left, top, right, bottom, trPaint
+        )
+        canvas.drawPath(
+            createCornersPath(left, top, right, bottom), createPaint()
         )
     }
 
@@ -122,12 +126,11 @@ class QrCodeBoxView @JvmOverloads constructor(
             lineTo(right, (bottom - cornerWidth))
         }
 
-    private var action: QrCodeAnalyzer.Action? = null
-    private var cameraExecutor: ExecutorService? = null
-
     fun setAction(action: QrCodeAnalyzer.Action) {
         this.action = action
     }
+
+    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
 
     @SuppressLint("RestrictedApi")
     fun startCamera(cameraPreview: PreviewView) {
@@ -137,16 +140,16 @@ class QrCodeBoxView @JvmOverloads constructor(
 
         try {
             cameraExecutor = Executors.newSingleThreadExecutor()
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
-            cameraProviderFuture.addListener({
+            cameraProviderFuture!!.addListener({
                 val imageAnalyzer = ImageAnalysis.Builder()
                     .setTargetAspectRatio(screenAspectRatio)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .apply {
                         setAnalyzer(
-                           cameraExecutor!!,
+                            cameraExecutor!!,
                             QrCodeAnalyzer(
                                 this@QrCodeBoxView, cameraPreview.width.toFloat(),
                                 cameraPreview.height.toFloat(), action!!
@@ -155,7 +158,7 @@ class QrCodeBoxView @JvmOverloads constructor(
                     }
 
                 try {
-                    cameraProviderFuture.get()?.let {
+                    cameraProviderFuture!!.get()?.let {
                         it.unbindAll()
                         it.bindToLifecycle(
                             context as LifecycleOwner,
@@ -176,21 +179,25 @@ class QrCodeBoxView @JvmOverloads constructor(
                 }
             }, ContextCompat.getMainExecutor(context))
 
-        } catch (e : java.lang.Exception) {
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
     }
 
+    @SuppressLint("RestrictedApi")
     fun shutdown() {
+        if (!isRunning) return
+
         cameraExecutor?.let {
             if (!it.isShutdown) {
                 it.shutdownNow()
+                cameraProviderFuture?.get()?.unbindAll()
                 isRunning = true
             }
         }
     }
 
-    fun isRunning(): Boolean  {
+    fun isRunning(): Boolean {
         return isRunning
     }
 }

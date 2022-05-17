@@ -55,7 +55,10 @@ class QrCodeAnalyzer(
                     if (rect != null
                         && barcodeBoxView.isValid(adjustBoundingRect(rect))
                     ) {
-                        barcodes[lastPosition].rawValue?.let { analyze.onResult(it) }
+                        barcodes[lastPosition].rawValue?.let {
+                            analyze.onResult(it)
+                            barcodeBoxView.shutdown()
+                        }
                     }
                 }
             }
@@ -79,7 +82,7 @@ class QrCodeAnalyzer(
     private fun onFail(ex: Exception) {
         handler.postDelayed({
             analyze.onFail(ex)
-        }, 3000)
+        }, 1000)
     }
 
     interface Action {

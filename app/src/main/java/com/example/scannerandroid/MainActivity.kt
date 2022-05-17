@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.TypedValue
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.view.PreviewView
@@ -13,12 +15,15 @@ import androidx.core.content.ContextCompat
 import com.example.scannerandroid.qrcode.QrCodeAnalyzer
 import com.example.scannerandroid.qrcode.QrCodeBoxView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
 
     private lateinit var cameraPreview: PreviewView
     private lateinit var barcodebox: QrCodeBoxView
+    private lateinit var tvResult: TextView
+    private lateinit var btnRestart: Button
 
     @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,9 +32,12 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
 
         cameraPreview = findViewById(R.id.cameraPreview)
         barcodebox = findViewById(R.id.barcodebox)
+        tvResult = findViewById(R.id.tvResult)
+        btnRestart = findViewById(R.id.btnRestart)
+
         barcodebox.setStokeSize(
             TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 10F, resources.displayMetrics
+                TypedValue.COMPLEX_UNIT_DIP, 5F, resources.displayMetrics
             )
         )
         barcodebox.setStrokeColor(
@@ -37,13 +45,15 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
         )
         barcodebox.setAction(this)
 
+        btnRestart.setOnClickListener {
+            startCamera()
+        }
     }
 
-    /*private fun cofigureBarcode() {
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
-    }*/
+    private fun startCamera() {
+        barcodebox.startCamera(cameraPreview)
+        tvResult.text = ""
+    }
 
     override fun onResume() {
         super.onResume()
@@ -76,8 +86,7 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
      */
     private fun checkIfCameraPermissionIsGranted() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            // Permission granted: start the preview
-            barcodebox.startCamera(cameraPreview)
+            startCamera()
         } else {
             // Permission denied
             MaterialAlertDialogBuilder(this)
@@ -109,13 +118,15 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
     }
 
     override fun onResult(result: String) {
-        showMessage(result)
-        barcodebox.shutdown()
+        tvResult.text = "Result : $result"
+        /*barcodebox.postDelayed(
+            { startCamera() }, 1000
+        )*/
     }
 
     override fun onFail(params: Exception) {
         params.message?.let { showMessage(it) }
-        barcodebox.startCamera(cameraPreview)
+        startCamera()
     }
 
     private fun showMessage(text: String) {
