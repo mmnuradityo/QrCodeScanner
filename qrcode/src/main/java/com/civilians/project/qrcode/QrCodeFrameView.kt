@@ -1,4 +1,4 @@
-package com.example.scannerandroid.qrcode
+package com.civilians.project.qrcode
 
 import android.content.Context
 import android.graphics.RectF

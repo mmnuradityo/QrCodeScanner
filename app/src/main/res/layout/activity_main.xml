@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.example.scannerandroid.qrcode.QrCodeFrameView
+    <com.civilians.project.qrcode.QrCodeFrameView
         android:id="@+id/barcodeView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

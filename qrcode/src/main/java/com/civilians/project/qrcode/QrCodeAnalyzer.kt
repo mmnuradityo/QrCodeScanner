@@ -1,4 +1,4 @@
-package com.example.scannerandroid.qrcode
+package com.civilians.project.qrcode
 
 import android.annotation.SuppressLint
 import android.graphics.Rect
@@ -77,7 +77,6 @@ class QrCodeAnalyzer(
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .build()
     )
-
 
     private fun onFail(ex: Exception) {
         handler.postDelayed({

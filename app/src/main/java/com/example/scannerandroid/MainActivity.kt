@@ -11,8 +11,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.scannerandroid.qrcode.QrCodeAnalyzer
-import com.example.scannerandroid.qrcode.QrCodeFrameView
+import com.civilians.project.qrcode.QrCodeAnalyzer
+import com.civilians.project.qrcode.QrCodeFrameView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 

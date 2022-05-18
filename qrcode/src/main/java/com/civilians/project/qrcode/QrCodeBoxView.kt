@@ -1,4 +1,4 @@
-package com.example.scannerandroid.qrcode
+package com.civilians.project.qrcode
 
 import android.annotation.SuppressLint
 import android.content.Context
