@@ -13,7 +13,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 
 class QrCodeAnalyzer(
-    private val barcodeBoxView: QrCodeBoxView,
+    private val barcodeView: QrCodeFrameView,
     private val previewViewWidth: Float,
     private val previewViewHeight: Float,
     private val analyze: Action
@@ -53,11 +53,11 @@ class QrCodeAnalyzer(
                     val lastPosition = barcodes.size - 1
                     val rect = barcodes[lastPosition].boundingBox
                     if (rect != null
-                        && barcodeBoxView.isValid(adjustBoundingRect(rect))
+                        && barcodeView.isValid(adjustBoundingRect(rect))
                     ) {
                         barcodes[lastPosition].rawValue?.let {
                             analyze.onResult(it)
-                            barcodeBoxView.shutdown()
+                            barcodeView.shutdown()
                         }
                     }
                 }

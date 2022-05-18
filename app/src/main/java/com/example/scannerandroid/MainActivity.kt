@@ -9,19 +9,16 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.scannerandroid.qrcode.QrCodeAnalyzer
-import com.example.scannerandroid.qrcode.QrCodeBoxView
+import com.example.scannerandroid.qrcode.QrCodeFrameView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
 
-    private lateinit var cameraPreview: PreviewView
-    private lateinit var barcodebox: QrCodeBoxView
+    private lateinit var qrCodeView: QrCodeFrameView
     private lateinit var tvResult: TextView
     private lateinit var btnRestart: Button
 
@@ -30,20 +27,19 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        cameraPreview = findViewById(R.id.cameraPreview)
-        barcodebox = findViewById(R.id.barcodebox)
+        qrCodeView = findViewById(R.id.barcodeView)
         tvResult = findViewById(R.id.tvResult)
         btnRestart = findViewById(R.id.btnRestart)
 
-        barcodebox.setStokeSize(
+        qrCodeView.setStokeSize(
             TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 5F, resources.displayMetrics
             )
         )
-        barcodebox.setStrokeColor(
+        qrCodeView.setStrokeColor(
             ContextCompat.getColor(this, R.color.purple_500)
         )
-        barcodebox.setAction(this)
+        qrCodeView.setAction(this)
 
         btnRestart.setOnClickListener {
             startCamera()
@@ -51,19 +47,19 @@ class MainActivity : AppCompatActivity(), QrCodeAnalyzer.Action {
     }
 
     private fun startCamera() {
-        barcodebox.startCamera(cameraPreview)
+        qrCodeView.startCamera()
         tvResult.text = ""
     }
 
     override fun onResume() {
         super.onResume()
-        if (!barcodebox.isRunning()) {
+        if (!qrCodeView.isRunning()) {
             checkCameraPermission()
         }
     }
     override fun onDestroy() {
         super.onDestroy()
-        barcodebox.shutdown()
+        qrCodeView.shutdown()
     }
 
 
